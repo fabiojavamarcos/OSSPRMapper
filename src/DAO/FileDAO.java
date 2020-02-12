@@ -66,7 +66,7 @@ public class FileDAO {
 		// TODO Auto-generated method stub
 		Connection con = DBUtil.getConnection(dbcon, user, pswd);
 		ArrayList<String> gs = new ArrayList<String>();
-		boolean found = false;
+		
 		try {
 			Statement comandoSql = con.createStatement();
 			
@@ -85,8 +85,31 @@ public class FileDAO {
 		return true;
 
 	}
+	
+	public boolean insertPr(String pr, String title, String body) {
+		// TODO Auto-generated method stub
+		Connection con = DBUtil.getConnection(dbcon, user, pswd);
+		
+		try {
+			Statement comandoSql = con.createStatement();
+			
+			String sql = "insert into pr values ("+pr+",'"+title+"'"+",'"+body+"')";
 
-	public ArrayList getPrs() {
+			System.out.println(sql);
+			
+			comandoSql.executeUpdate(sql);
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+
+	}
+
+	public ArrayList getAprioris() {
 		// TODO Auto-generated method stub
 		Connection con = DBUtil.getConnection(dbcon, user, pswd);
 		ArrayList<Apriori> prs = new ArrayList<Apriori>();
@@ -126,7 +149,43 @@ public class FileDAO {
 	
 	}
 	
-
+	public ArrayList<String> getTitleBody(int pr){
+		Connection con = DBUtil.getConnection(dbcon, user, pswd);
+		String title = null;
+		String body = null;
+		ArrayList<String> result = new ArrayList();
+		boolean found = false;
+		try {
+			Statement comandoSql = con.createStatement();
+			
+			//String sql = "select general from file a, \"file_API\" b, \"API_specific\" c where a.file_name = b.file_name and c.api_name_fk = b.api_name and a.full_name like '%"+ java + "%' GROUP BY c.general"; 
+			String sql = "select title, body from pr where pr ="+ pr ;
+			
+			System.out.println(sql);
+			
+			ResultSet rs = comandoSql.executeQuery(sql);
+			
+			
+			
+			
+			if(rs.next()){
+				title = rs.getString("title");
+				body = rs.getString("body");
+				result.add(title);
+				result.add(body);
+				found = true;
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (found)
+			return result;
+		else
+			return null;
+		
+	}
 	
 }
 

@@ -5,6 +5,20 @@ import java.util.ArrayList;
 public class AprioriNew {
 	
 	private int pr;
+	private String title;
+	private String body;
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getBody() {
+		return body;
+	}
+	public void setBody(String body) {
+		this.body = body;
+	}
 	private ArrayList<String> generals;
 	public AprioriNew() {
 		super();

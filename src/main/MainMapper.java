@@ -25,6 +25,9 @@ public class MainMapper {
 	private String java = null;
 	private String csv = null;
 	private int isOnlyCSV = 0;
+	private String separator = ",";
+	private String title = null;
+	private String body = null;
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -44,10 +47,13 @@ public class MainMapper {
 		file = args[4];
 		csv = args[5];
 		isOnlyCSV = Integer.parseInt(args[6]);
+		separator = args[7];
 		if (isOnlyCSV==1) {
 			getPrs();
 		}
-		readData();
+		else {
+			readData();
+		}
 	}
 
 
@@ -70,15 +76,18 @@ public class MainMapper {
 			e.printStackTrace();
 		}// primeira linha do arquivo
 		//String source = s;
-		System.out.println("Read: "+s);
+		//System.out.println("Read: "+s);
 		ArrayList<String> api = null;
 		while (s != null) {
+			System.out.println("linha:"+s);
 			splitLine(s);
 			api = findAPI(pr,java);
 			if (api==null)
 				System.out.println("not found in jabref: "+pr+"  - "+java);
-			else
+			else {
 				insertApriori(api);
+				insertPr();
+			}
 			try {
 				s = br.readLine();
 			} catch (IOException e) {
@@ -109,7 +118,7 @@ public class MainMapper {
 	private void getPrs() {
 		// TODO Auto-generated method stub
 		FileDAO fd = FileDAO.getInstancia(db,user,pswd);
-		ArrayList<Apriori> aps = fd.getPrs();
+		ArrayList<Apriori> aps = fd.getAprioris();
 		
 		ArrayList<AprioriNew> apns = new ArrayList<AprioriNew>();
 		
@@ -157,7 +166,15 @@ public class MainMapper {
 				for (int i=0; i<apns.size(); i++) {
 					AprioriNew apnAux = apns.get(i);
 					ArrayList<String> gs = apnAux.getGenerals();
-					line = line + apnAux.getPr();
+					pr = apnAux.getPr();
+					line = line + pr;
+					FileDAO dao = FileDAO.getInstancia(db, user, pswd);
+					ArrayList<String> result = dao.getTitleBody(pr);
+					line = line + ","+result.get(0)+ ","+result.get(1);// title and body
+					if(apnAux.getPr()==18)
+					{
+						System.out.println("Debug");
+					}
 					for (int j=0; j<gs.size(); j++) {
 						line = line + ","+gs.get(j);
 					}
@@ -191,6 +208,18 @@ public class MainMapper {
 		}
 		
 	}
+	
+	private void insertPr() {
+		// TODO Auto-generated method stub
+		FileDAO fd = FileDAO.getInstancia(db,user,pswd);
+		
+		boolean result = fd.insertPr(pr, title, body);
+		if (!result) {
+				System.out.println("Insert pr failed: "+ pr + " - "+ title + " - "+ body);
+		}
+		
+		
+	}
 
 
 	private ArrayList<String> findAPI(String pr2, String java2) {
@@ -204,16 +233,47 @@ public class MainMapper {
 	}
 
 
-	private void splitLine(String s) {
+	private boolean splitLine(String s) {
 		// TODO Auto-generated method stub
-		int comma = s.indexOf(",");
+		boolean isOk = false;
+		int comma = s.indexOf(separator);
+		if (comma == -1) {
+			System.out.println(" line with problems:  first separator missing...");
+			return isOk;
+		}
 		pr = s.substring(0, comma);
+		int comma1 = s.indexOf(separator, comma+1);
+		if (comma1 == -1) {
+			System.out.println(" line with problems:  second separator missing...");
+			return isOk;
+		}
+		java = s.substring(comma+1, comma1);
 		// get only the file name (because in the OSSParser that is filling the database without the last "/" before file name!!!)
-		int slash = s.lastIndexOf("/");
-		java = s.substring(slash+1, s.length());
-		pr.trim();
-		java.trim();
-		System.out.println("pr: "+pr+" , java: "+java);
+		int slash = java.lastIndexOf("/");
+		if (slash == -1) {
+			System.out.println(" line with problems:  path slash missing...");
+			return isOk;
+		}
+		java = java.substring(slash+1, java.length());
+		int comma2 = s.indexOf(separator, comma1+1);
+		if (comma2 == -1) {
+			System.out.println(" line with problems:  third separator missing...");
+			return isOk;
+		}
+		title = s.substring(comma1+1, comma2);
+		body = s.substring(comma2+1, s.length());
+		// get only the file name (because in the OSSParser that is filling the database without the last "/" before file name!!!)
+		//int slash = s.lastIndexOf("/");
+		//java = s.substring(slash+1, s.length());
+		pr = pr.trim();
+		java = java.trim();
+		title = title.trim();
+		body = body.trim();
+		System.out.println("pr: "+pr+" , java: "+java + " title "+ title);
+		
+		isOk = true;
+		
+		return isOk;
 		
 	}
 
