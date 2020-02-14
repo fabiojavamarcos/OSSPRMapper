@@ -28,6 +28,9 @@ public class MainMapper {
 	private String separator = ",";
 	private String title = null;
 	private String body = null;
+	private String bin = null;
+	private ArrayList<AprioriNew> apns = new ArrayList<AprioriNew>();
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -48,12 +51,96 @@ public class MainMapper {
 		csv = args[5];
 		isOnlyCSV = Integer.parseInt(args[6]);
 		separator = args[7];
+		bin = args[8];
 		if (isOnlyCSV==1) {
 			getPrs();
+			genBinaryExit();
 		}
 		else {
 			readData();
 		}
+	}
+
+
+	private void genBinaryExit() {
+		// TODO Auto-generated method stub
+		try {
+			FileOutputStream os = new FileOutputStream(bin);
+			OutputStreamWriter osw = new OutputStreamWriter(os);
+			BufferedWriter bw = new BufferedWriter(osw);
+	    	//bw.write("header \n");
+			String line = "";
+			FileDAO dao = FileDAO.getInstancia(db, user, pswd);
+			// write header
+			line = line + "pr";
+			ArrayList<String> dbGenerals = dao.getDistinctGenerals();
+			for (int k=0; k<dbGenerals.size(); k++) {
+				line = line + ","+dbGenerals.get(k);
+			}
+			line = line + ",Title,Body\n";
+			bw.write(line);
+			
+			// end header
+			boolean found = false;
+			int pr = 0;
+			for (int i=0; i<apns.size(); i++) {
+				AprioriNew apnAux = apns.get(i);
+				ArrayList<String> gs = apnAux.getGenerals();
+				pr = apnAux.getPr();
+							
+				// order line in order of generals generals
+				
+				ArrayList<String> printLine = new ArrayList();			
+				
+				for (int t=0; t<dbGenerals.size(); t++) {
+					for (int j=0; j<gs.size(); j++) {
+						if (gs.get(j).equals(dbGenerals.get(t))){
+							found = true;
+						}
+						
+					}
+					if (found){
+						printLine.add(t,"1" );
+						found = false;
+					}
+					else {
+						printLine.add(t, "0");
+					}
+				}
+				
+				line = "";
+				line = line + pr;
+				
+				if(apnAux.getPr()==18)
+				{
+					System.out.println("Debug");
+				}
+				for (int j=0; j<printLine.size(); j++) {
+					line = line + ","+printLine.get(j);
+				}
+				ArrayList<String> result = dao.getTitleBody(pr);
+				String title = result.get(0);
+				String body = result.get(1);
+				if(title.equals("nan")) {
+					title="";
+				}
+				if(body.equals("nan")) {
+					body="";
+				}
+				line = line + ","+title+ ","+body;// title and body
+				line = line + "\n";
+				bw.write(line);
+				line = "";
+	    	}
+	    	bw.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 
@@ -120,7 +207,6 @@ public class MainMapper {
 		FileDAO fd = FileDAO.getInstancia(db,user,pswd);
 		ArrayList<Apriori> aps = fd.getAprioris();
 		
-		ArrayList<AprioriNew> apns = new ArrayList<AprioriNew>();
 		
 		if (aps==null)
 			System.out.println("No apriori found!!!");

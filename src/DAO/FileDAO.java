@@ -2,6 +2,7 @@ package DAO;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -173,6 +174,42 @@ public class FileDAO {
 				body = rs.getString("body");
 				result.add(title);
 				result.add(body);
+				found = true;
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (found)
+			return result;
+		else
+			return null;
+		
+	}
+	
+	public ArrayList<String> getDistinctGenerals() {
+		Connection con = DBUtil.getConnection(dbcon, user, pswd);
+		String general = null;
+		String col = null;
+		ArrayList<String> result = new ArrayList();
+		boolean found = false;
+		try {
+			Statement comandoSql = con.createStatement();
+			
+			//String sql = "select general from file a, \"file_API\" b, \"API_specific\" c where a.file_name = b.file_name and c.api_name_fk = b.api_name and a.full_name like '%"+ java + "%' GROUP BY c.general"; 
+			String sql = "select distinct general from apriori ";
+			
+			System.out.println(sql);
+			
+			ResultSet rs = comandoSql.executeQuery(sql);
+			ResultSetMetaData rsmd = rs.getMetaData();
+			
+			while(rs.next()){
+				col = rsmd.getColumnName(1);
+				general = rs.getString(1);
+				result.add(general);
+				
 				found = true;
 			}
 			
