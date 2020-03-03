@@ -30,6 +30,7 @@ public class MainMapper {
 	private String body = null;
 	private String bin = null;
 	private ArrayList<AprioriNew> apns = new ArrayList<AprioriNew>();
+	private String classes = null;
 
 
 	public static void main(String[] args) {
@@ -52,6 +53,7 @@ public class MainMapper {
 		isOnlyCSV = Integer.parseInt(args[6]);
 		separator = args[7];
 		bin = args[8];
+		classes = args[9];
 		if (isOnlyCSV==1) {
 			getPrs();
 			genBinaryExit();
@@ -116,7 +118,7 @@ public class MainMapper {
 					System.out.println("Debug");
 				}
 				for (int j=0; j<printLine.size(); j++) {
-					line = line + ","+printLine.get(j);
+					line = line + ";"+printLine.get(j);
 				}
 				ArrayList<String> result = dao.getTitleBody(pr);
 				String title = result.get(0);
@@ -127,7 +129,7 @@ public class MainMapper {
 				if(body.equals("nan")) {
 					body="";
 				}
-				line = line + ","+title+ ","+body;// title and body
+				line = line + ";"+title+ ";"+body;// title and body
 				line = line + "\n";
 				bw.write(line);
 				line = "";
@@ -247,28 +249,50 @@ public class MainMapper {
 				FileOutputStream os = new FileOutputStream(csv);
 				OutputStreamWriter osw = new OutputStreamWriter(os);
 				BufferedWriter bw = new BufferedWriter(osw);
+				
+				FileOutputStream osc = new FileOutputStream(classes);
+				OutputStreamWriter oswc = new OutputStreamWriter(osc);
+				BufferedWriter bwc = new BufferedWriter(oswc);
 		    	//bw.write("header \n");
 				String line = "";
+				String lineClasses = "";
 				for (int i=0; i<apns.size(); i++) {
 					AprioriNew apnAux = apns.get(i);
 					ArrayList<String> gs = apnAux.getGenerals();
 					pr = apnAux.getPr();
-					line = line + pr;
 					FileDAO dao = FileDAO.getInstancia(db, user, pswd);
 					ArrayList<String> result = dao.getTitleBody(pr);
-					line = line + ","+result.get(0)+ ","+result.get(1);// title and body
-					if(apnAux.getPr()==18)
-					{
-						System.out.println("Debug");
+					String title = result.get(0);
+					String body = result.get(1);
+					if (title!=null&&!title.contentEquals("nan")&&!title.equals("NaN")&&!title.isEmpty()){
+						if (body!=null&&!body.contentEquals("nan")&&!body.equals("NaN")&&!body.isEmpty()){
+							
+							line = line + pr;
+							lineClasses = lineClasses + pr +";";
+							line = line + ","+result.get(0)+ ","+result.get(1);// title and body
+							if(apnAux.getPr()==18)
+							{
+								System.out.println("Debug");
+							}
+							for (int j=0; j<gs.size(); j++) {
+								line = line + ","+gs.get(j);
+								if (j==(gs.size()-1))
+									
+									lineClasses = lineClasses + gs.get(j);
+								else
+									lineClasses = lineClasses + gs.get(j)+"-";
+							}
+							line = line + "\n";
+							lineClasses = lineClasses + "\n";
+							bw.write(line);
+							bwc.write(lineClasses);
+						}
 					}
-					for (int j=0; j<gs.size(); j++) {
-						line = line + ","+gs.get(j);
-					}
-					line = line + "\n";
-					bw.write(line);
 					line = "";
+					lineClasses = "";
 		    	}
 		    	bw.close();
+		    	bwc.close();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
